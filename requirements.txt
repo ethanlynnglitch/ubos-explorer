@@ -1,0 +1,16 @@
+# UBOS Explorer - pinned runtime dependencies.
+# Install with:  python -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+# Excel reading
+openpyxl==3.1.5      # .xlsx quarterly workbooks
+xlrd==2.0.1          # legacy BIFF8 .xls annual workbook
+
+# Data / storage
+pandas==3.0.5
+pyarrow==25.0.1      # Parquet
+duckdb==1.5.5        # analytical layer
+PyYAML==6.0.2        # config/sources.yml
+
+# Dashboard
+streamlit==1.62.0
+altair==6.2.2

@@ -1,0 +1,360 @@
+# UBOS Explorer - source block configuration.
+#
+# One entry per statistical table block to extract. Every structural value here
+# was verified against the workbooks (see reports/inspection_report.md); the
+# pipeline does NOT attempt generic table detection.
+#
+# Row/column numbers are 1-based Excel coordinates.
+
+scope:
+  # Fiscal years strictly before this are parsed, counted and written to
+  # rejects.parquet as `out_of_scope_period`, never to the fact table.
+  min_fiscal_year: "2016/17"
+
+layouts:
+  quarterly_va:
+    # Quarterly GDP-by-activity sheets. Identical across all four quarterly
+    # workbooks: title row 1, fiscal year row 3 (merged or repeated), quarter
+    # row 4, labels in column A, data rows 5-36.
+    year_row: 3
+    quarter_row: 4
+    label_col: 1
+    data_rows: [[5, 36]]
+    # Structural label rows that carry no data (matched after normalization).
+    skip_labels: ["ADJUSTMENTS", "ADJUSTMENT", "Adjustments"]
+
+  annual_isic:
+    # Annual publication tables: labels in column B, ISIC code in column C,
+    # fiscal years from column D. Header/data rows differ per block.
+    label_col: 2
+    isic_col: 3
+    first_data_col: 4
+    skip_labels: []
+
+blocks:
+  # ---------------------------------------------------------------- annual --
+  - source_id: agdp_2026_06_gdp_cp_level
+    file: 06_2026AGDP_Publication_Tables_2025_26_June_Release.xls
+    engine: xlrd
+    sheet: GDP CP
+    layout: annual_isic
+    source_table: Table 2.1
+    title_cell: [2, 2]
+    year_row: 6
+    data_rows: [[8, 36], [38, 38]]
+    release_id: 2026-06_AGDP
+    release_date: 2026-06-04
+    frequency: A
+    price_basis: current
+    adjustment: original
+    measure: level
+    unit: UGX_bn
+
+  - source_id: agdp_2026_06_gdp_kp_level
+    file: 06_2026AGDP_Publication_Tables_2025_26_June_Release.xls
+    engine: xlrd
+    sheet: GDP KP
+    layout: annual_isic
+    source_table: Table 3.1
+    title_cell: [2, 2]
+    year_row: 6
+    data_rows: [[8, 36], [38, 38]]
+    release_id: 2026-06_AGDP
+    release_date: 2026-06-04
+    frequency: A
+    price_basis: constant_2016_17
+    adjustment: original
+    measure: level
+    unit: UGX_bn
+
+  - source_id: agdp_2026_06_gdp_kp_growth
+    file: 06_2026AGDP_Publication_Tables_2025_26_June_Release.xls
+    engine: xlrd
+    sheet: GDP KP
+    layout: annual_isic
+    source_table: Table 3.2
+    title_cell: [42, 2]
+    year_row: 46
+    data_rows: [[48, 76], [78, 78]]
+    release_id: 2026-06_AGDP
+    release_date: 2026-06-04
+    frequency: A
+    price_basis: constant_2016_17
+    adjustment: original
+    measure: growth_pct
+    unit: pct
+
+  # ------------------------------------ quarterly, June release (Q3 vintage) --
+  - source_id: qgdp_2026_06_const_original_va
+    file: 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Original_VA
+    layout: quarterly_va
+    source_table: Table 3
+    title_cell: [1, 1]
+    # Guard: columns B-F of this sheet hold a stray block of ANNUAL fiscal-year
+    # totals. The year/quarter header rule already excludes them; this pins it.
+    first_data_col: 9
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-23
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: original
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_06_const_original_growth
+    file: 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Original_Growth
+    layout: quarterly_va
+    source_table: Table 4
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-23
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: original
+    measure: growth_pct
+    unit: pct
+
+  - source_id: qgdp_2026_06_const_deseason_va
+    file: 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Deseason_VA
+    layout: quarterly_va
+    source_table: Table 6
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-23
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: seasonally_adjusted
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_06_const_deseason_growth
+    file: 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Deseason_Growth
+    layout: quarterly_va
+    source_table: Table 7
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-23
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: seasonally_adjusted
+    measure: growth_pct
+    unit: pct
+
+  - source_id: qgdp_2026_06_const_trend_va
+    file: 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Trend_VA
+    layout: quarterly_va
+    source_table: Table 9
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-23
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: trend_cycle
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_06_const_trend_growth
+    file: 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Trend_Growth
+    layout: quarterly_va
+    source_table: Table 10
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-23
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: trend_cycle
+    measure: growth_pct
+    unit: pct
+
+  - source_id: qgdp_2026_06_curr_original_va
+    file: 06_2026QGDP_Current_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Original_VA
+    layout: quarterly_va
+    source_table: Table 13
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-11
+    frequency: Q
+    price_basis: current
+    adjustment: original
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_06_curr_deseason_va
+    file: 06_2026QGDP_Current_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Deseason_VA
+    layout: quarterly_va
+    source_table: Table 15
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-11
+    frequency: Q
+    price_basis: current
+    adjustment: seasonally_adjusted
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_06_curr_trend_va
+    file: 06_2026QGDP_Current_Prices_Q3_2025-26.xlsx
+    engine: openpyxl
+    sheet: Trend_VA
+    layout: quarterly_va
+    source_table: Table 17
+    title_cell: [1, 1]
+    release_id: 2026-06_QGDP
+    release_date: 2026-06-11
+    frequency: Q
+    price_basis: current
+    adjustment: trend_cycle
+    measure: level
+    unit: UGX_bn
+
+  # ----------------------------------- quarterly, March release (Q2 vintage) --
+  - source_id: qgdp_2026_03_const_original_va
+    file: 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Original_VA
+    layout: quarterly_va
+    source_table: Table 3
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: original
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_03_const_original_growth
+    file: 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Original_Growth
+    layout: quarterly_va
+    source_table: Table 4
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: original
+    measure: growth_pct
+    unit: pct
+
+  - source_id: qgdp_2026_03_const_deseason_va
+    file: 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Deseason_VA
+    layout: quarterly_va
+    source_table: Table 6
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: seasonally_adjusted
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_03_const_deseason_growth
+    file: 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Deseason_Growth
+    layout: quarterly_va
+    source_table: Table 7
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: seasonally_adjusted
+    measure: growth_pct
+    unit: pct
+
+  - source_id: qgdp_2026_03_const_trend_va
+    file: 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Trend_VA
+    layout: quarterly_va
+    source_table: Table 9
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: trend_cycle
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_03_const_trend_growth
+    file: 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Trend_Growth
+    layout: quarterly_va
+    source_table: Table 10
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: constant_2016_17
+    adjustment: trend_cycle
+    measure: growth_pct
+    unit: pct
+
+  - source_id: qgdp_2026_03_curr_original_va
+    file: 03_2026QGDP_Current_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Original_VA
+    layout: quarterly_va
+    source_table: Table 13
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: current
+    adjustment: original
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_03_curr_deseason_va
+    file: 03_2026QGDP_Current_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Deseason_VA
+    layout: quarterly_va
+    source_table: Table 15
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: current
+    adjustment: seasonally_adjusted
+    measure: level
+    unit: UGX_bn
+
+  - source_id: qgdp_2026_03_curr_trend_va
+    file: 03_2026QGDP_Current_Prices_Q2_2025_26.xlsx
+    engine: openpyxl
+    sheet: Trend_VA
+    layout: quarterly_va
+    source_table: Table 17
+    title_cell: [1, 1]
+    release_id: 2026-03_QGDP
+    release_date: 2026-04-09
+    frequency: Q
+    price_basis: current
+    adjustment: trend_cycle
+    measure: level
+    unit: UGX_bn

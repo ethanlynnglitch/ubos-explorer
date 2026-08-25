@@ -1,0 +1,29 @@
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Derived data artifacts -------------------------------------------------
+# Everything below is rebuildable from data/raw/ with:
+#   python -m ubos_explorer.pipeline   (writes data/processed/)
+#   python -m ubos_explorer.warehouse  (writes data/ubos.duckdb)
+data/processed/
+data/ubos.duckdb
+data/ubos.duckdb.wal
+data/warehouse/
+
+# --- Streamlit --------------------------------------------------------------
+.streamlit/secrets.toml
+
+# --- OS / editors -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
