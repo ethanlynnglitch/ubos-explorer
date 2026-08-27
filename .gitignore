@@ -21,6 +21,19 @@ data/warehouse/
 # --- Streamlit --------------------------------------------------------------
 .streamlit/secrets.toml
 
+# --- Credentials: never commit these ----------------------------------------
+# SSH keys must live in ~/.ssh, never in a repository.
+id_rsa
+id_ed25519
+id_ecdsa
+*.pem
+*.ppk
+authoris*_keys*
+authoriz*_keys*
+.env
+.env.*
+*.secret
+
 # --- OS / editors -----------------------------------------------------------
 .DS_Store
 Thumbs.db
