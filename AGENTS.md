@@ -33,6 +33,42 @@ Outputs:
 - `data/processed/rejects.parquet` — every cell that did not become an observation, with reason
 - `reports/ingestion_qa.md` — validation report
 
+## Check for new UBOS releases (collector)
+
+```bash
+PYTHONPATH=src .venv/bin/python -m ubos_explorer.collector           # check only
+PYTHONPATH=src .venv/bin/python -m ubos_explorer.collector --fetch   # download new/changed
+```
+
+Discovers workbook links on the pages listed in `config/collector.yml`, re-checks
+every file we already ingested, and classifies each as NEW / CHANGED / UNCHANGED /
+MISSING / ERROR. Downloads go to `data/incoming/` (gitignored) with a
+`collection_manifest.json`. Exit code `1` if any candidate errored.
+
+**Two things about this that must not be "simplified" later:**
+
+- **`www.ubos.org` does not send its TLS intermediate certificate**, so `requests`
+  cannot build a trust chain. The fix is the bundled *public* intermediate at
+  `src/ubos_explorer/certs/ubos-intermediate.pem`, concatenated with `certifi`'s
+  roots at runtime — because `verify=<file>` *replaces* the trust store rather
+  than adding to it. Never "fix" this with `verify=False`: the collector refuses
+  to run if `verify_tls: false` is set, on purpose. Downloading official
+  statistics over an unauthenticated channel would destroy the provenance
+  guarantee the whole project rests on.
+- **The collector never writes to `data/raw/`.** Promoting a downloaded workbook
+  is a deliberate human step, so hash-pinned provenance of ingested files cannot
+  be disturbed. It also never overwrites an existing file.
+
+Fetching is permitted: `https://www.ubos.org/robots.txt` is `User-agent: * /
+Allow: /` with no `Crawl-delay` (verified 2026-09-08). We still wait 2s between
+requests and send an honest User-Agent.
+
+**A new workbook is not automatically ingestable.** `sources.yml` pins sheet
+names, row ranges and header rows. After `--fetch`, the collector probes each
+download against those expectations and reports `LAYOUT CHANGED` if anything
+moved. Across the only two releases we have, the layout changed *both* times, so
+treat a new file as needing human review, not as drop-in data.
+
 ## Build the DuckDB analytical layer
 
 ```bash

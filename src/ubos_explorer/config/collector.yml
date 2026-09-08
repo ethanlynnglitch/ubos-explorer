@@ -1,0 +1,60 @@
+# UBOS Explorer - collector configuration.
+#
+# Controls where the collector looks for published workbooks and how politely it
+# behaves. Nothing here decides how a workbook is *parsed* - that stays in
+# sources.yml.
+#
+# Verified 2026-09-08: https://www.ubos.org/robots.txt is
+#   User-agent: *
+#   Allow: /
+# i.e. no crawl restrictions and no Crawl-delay. We still rate-limit.
+
+site:
+  base_url: https://www.ubos.org
+  # UBOS serves statistical workbooks from this directory.
+  upload_path: /wp-content/uploads/statistics
+
+http:
+  # Identify the client honestly, with a contact route, so UBOS can see who we
+  # are and reach us if we cause trouble.
+  user_agent: "ubos-explorer/0.1 (research data collector; +https://github.com/ethanlynnglitch/ubos-explorer)"
+  # Seconds to wait between requests. Deliberately conservative: a national
+  # statistics office is not a CDN.
+  delay_seconds: 2.0
+  timeout_seconds: 60
+  max_retries: 2
+  # www.ubos.org does not send its intermediate certificate, so requests cannot
+  # build a trust chain on its own. We supply the missing PUBLIC intermediate and
+  # keep verification ENABLED. Never set this to false.
+  verify_tls: true
+  ca_bundle: certs/ubos-intermediate.pem
+
+# Pages that list links to statistical workbooks. The collector fetches each,
+# extracts .xls/.xlsx links, and keeps those under `upload_path`.
+discovery_pages:
+  - https://www.ubos.org/qgdp/
+  - https://www.ubos.org/explore-statistics/
+  - https://www.ubos.org/gdp-at-current-prices/
+
+# Files we already ingested. The collector re-checks these so that a silent
+# republish (same filename, different content) is detected rather than missed.
+# Filenames must match those in data/raw/.
+watch_files:
+  - 03_2026QGDP_Constant_Prices_Q2_2025_26.xlsx
+  - 03_2026QGDP_Current_Prices_Q2_2025_26.xlsx
+  - 06_2026QGDP_Constant_Prices_Q3_2025-26.xlsx
+  - 06_2026QGDP_Current_Prices_Q3_2025-26.xlsx
+  - 06_2026AGDP_Publication_Tables_2025_26_June_Release.xls
+
+# Only files matching these patterns are considered relevant candidates.
+interesting_patterns:
+  - "QGDP"
+  - "AGDP"
+  - "GDP"
+
+paths:
+  # Downloads land here. data/raw/ is never written to by the collector: promoting
+  # a file into data/raw/ stays a deliberate human step, so the hash-pinned
+  # provenance of already-ingested files cannot be disturbed.
+  incoming: data/incoming
+  raw: data/raw

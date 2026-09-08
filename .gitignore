@@ -18,6 +18,10 @@ data/ubos.duckdb
 data/ubos.duckdb.wal
 data/warehouse/
 
+# Collector downloads. Transient staging: a workbook is only kept permanently
+# once a human promotes it into data/raw/.
+data/incoming/
+
 # --- Streamlit --------------------------------------------------------------
 .streamlit/secrets.toml
 
@@ -28,6 +32,10 @@ id_ed25519
 id_ecdsa
 *.pem
 *.ppk
+# Exception: this is a PUBLIC CA intermediate certificate, not a secret. It is
+# needed because www.ubos.org fails to send its intermediate cert, and we refuse
+# to work around that by disabling TLS verification.
+!src/ubos_explorer/certs/*.pem
 authoris*_keys*
 authoriz*_keys*
 .env

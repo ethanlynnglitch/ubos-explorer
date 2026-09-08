@@ -14,3 +14,8 @@ PyYAML==6.0.2        # config/sources.yml
 # Dashboard
 streamlit==1.62.0
 altair==6.2.2
+
+# Collector (fetching workbooks from ubos.org)
+requests==2.34.2
+beautifulsoup4==4.15.0
+certifi==2026.7.22        # CA roots; combined with the bundled UBOS intermediate
